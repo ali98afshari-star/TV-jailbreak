@@ -35,11 +35,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: dashboard/package-lock.json
 
       - name: Install dependencies (Dashboard)
         working-directory: ./dashboard
-        run: npm ci
+        run: npm install
 
       - name: Build Dashboard
         working-directory: ./dashboard
@@ -84,7 +83,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: android/package-lock.json
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -102,7 +100,7 @@ jobs:
 
       - name: Install dependencies (Android)
         working-directory: ./android
-        run: npm ci
+        run: npm install
 
       - name: Build Web Assets
         working-directory: ./android
