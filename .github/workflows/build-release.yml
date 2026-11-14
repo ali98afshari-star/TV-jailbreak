@@ -16,7 +16,7 @@ permissions:
   packages: write
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   # Desktop App (Electron + Vue)
@@ -83,11 +83,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
+          java-package: jdk
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -100,13 +100,13 @@ jobs:
         working-directory: ./android
         run: npm install
 
+      - name: Add Android Platform (Capacitor)
+        working-directory: ./android
+        run: npx cap add android
+
       - name: Build Web Assets
         working-directory: ./android
         run: npm run build
-
-      - name: Add Android Platform
-        working-directory: ./android
-        run: npx cap add android || true
 
       - name: Sync Capacitor
         working-directory: ./android
@@ -232,26 +232,26 @@ jobs:
 
           ### 🚀 نصب
           **Desktop:**
-          \`\`\`bash
+          ```bash
           # Linux
           chmod +x TV-jailbreak-*.AppImage
           ./TV-jailbreak-*.AppImage
 
           # Windows
           TV-jailbreak-Setup-*.exe
-          \`\`\`
+          ```
 
           **Android:**
-          \`\`\`bash
+          ```bash
           adb install tv-jailbreak-debug.apk
-          \`\`\`
+          ```
 
           **Scripts:**
-          \`\`\`bash
+          ```bash
           tar -xzf tv-jailbreak-scripts.tar.gz
           cd scripts
           ./tv-customizer.sh -i 192.168.1.100 -p 5555
-          \`\`\`
+          ```
           EOF
 
       - name: Create Release
