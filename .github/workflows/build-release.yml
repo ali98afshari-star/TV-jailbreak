@@ -55,18 +55,20 @@ jobs:
 
       - name: Upload Linux Artifacts
         if: matrix.os == 'ubuntu-latest'
+        working-directory: ./dashboard
         uses: actions/upload-artifact@v4
         with:
           name: tv-jailbreak-linux
-          path: dashboard/dist/*.{AppImage,deb}
+          path: dist/*.{AppImage,deb}
           retention-days: 30
 
       - name: Upload Windows Artifacts
         if: matrix.os == 'windows-latest'
+        working-directory: ./dashboard
         uses: actions/upload-artifact@v4
         with:
           name: tv-jailbreak-windows
-          path: dashboard/dist/*.{exe,msi}
+          path: dist/*.{exe,msi}
           retention-days: 30
 
   # Android App (Capacitor + Vue)
