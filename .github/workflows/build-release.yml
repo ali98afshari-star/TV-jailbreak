@@ -22,7 +22,7 @@ jobs:
   # Desktop App (Electron + Vue)
   build-desktop:
     name: Build Desktop (Linux & Windows)
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
