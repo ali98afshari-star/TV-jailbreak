@@ -1,0 +1,276 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # Desktop App (Electron + Vue)
+  build-desktop:
+    name: Build Desktop (Linux & Windows)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install dependencies (Dashboard)
+        working-directory: ./dashboard
+        run: npm ci
+
+      - name: Build Dashboard
+        working-directory: ./dashboard
+        run: npm run build
+
+      - name: Build Electron App (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: ./dashboard
+        run: npm run build:linux
+
+      - name: Build Electron App (Windows)
+        if: matrix.os == 'windows-latest'
+        working-directory: ./dashboard
+        run: npm run build:win
+
+      - name: Upload Linux Artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv-jailbreak-linux
+          path: dashboard/dist/*.{AppImage,deb}
+          retention-days: 30
+
+      - name: Upload Windows Artifacts
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv-jailbreak-windows
+          path: dashboard/dist/*.{exe,msi}
+          retention-days: 30
+
+  # Android App (Capacitor + Vue)
+  build-android:
+    name: Build Android APK/AAB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: android/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          ndk-version: r26c
+          build-tools-version: '34.0.0'
+
+      - name: Install dependencies (Android)
+        working-directory: ./android
+        run: npm ci
+
+      - name: Build Web Assets
+        working-directory: ./android
+        run: npm run build
+
+      - name: Add Android Platform
+        working-directory: ./android
+        run: npx cap add android || true
+
+      - name: Sync Capacitor
+        working-directory: ./android
+        run: npx cap sync android
+
+      - name: Build Debug APK
+        working-directory: ./android/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Build Release AAB
+        working-directory: ./android/android
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv-jailbreak-android-debug
+          path: android/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Upload Release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv-jailbreak-android-release
+          path: android/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+  # Scripts Package
+  package-scripts:
+    name: Package Shell Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create scripts package
+        run: |
+          mkdir -p release-scripts
+          cp -r scripts release-scripts/
+          cp README.md release-scripts/
+          cp LICENSE release-scripts/ 2>/dev/null || true
+          cd release-scripts
+          tar -czf ../tv-jailbreak-scripts.tar.gz .
+
+      - name: Upload Scripts Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv-jailbreak-scripts
+          path: tv-jailbreak-scripts.tar.gz
+          retention-days: 30
+
+  # Create Release
+  release:
+    name: Create GitHub Release
+    needs: [build-desktop, build-android, package-scripts]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Download Linux Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: tv-jailbreak-linux
+          path: ./release/linux
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: tv-jailbreak-windows
+          path: ./release/windows
+
+      - name: Download Android Debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: tv-jailbreak-android-debug
+          path: ./release/android
+
+      - name: Download Android Release AAB
+        uses: actions/download-artifact@v4
+        with:
+          name: tv-jailbreak-android-release
+          path: ./release/android-release
+
+      - name: Download Scripts Package
+        uses: actions/download-artifact@v4
+        with:
+          name: tv-jailbreak-scripts
+          path: ./release/scripts
+
+      - name: Generate Release Notes
+        id: release_notes
+        run: |
+          cat << 'EOF' > release_notes.md
+          ## 📦 TV-jailbreak ${{ github.ref_name }}
+
+          ### 🖥️ Desktop App (Electron + Vue 3)
+          - **Linux**: AppImage, .deb
+          - **Windows**: NSIS Installer (.exe), Portable (.exe)
+
+          ### 📱 Android App (Capacitor + Vue 3)
+          - **Debug APK**: برای تست و دیباگ
+          - **Release AAB**: برای انتشار در Play Store
+
+          ### 🐚 Shell Scripts
+          - اسکریپت‌های شل کامل برای اجرای مستقیم روی Linux/macOS/WSL/Termux
+          - ماژول‌ها: لانچر، بلوتوث، کی‌مپر، اکسسبلیتی، ADB، پوینتر
+
+          ### ✨ ویژگی‌ها
+          - 🎨 رابط کاربری RTL (فارسی/انگلیسی) با تم دارک
+          - 📺 پشتیبانی از تمام تلویزیون‌های اندرویدی (Snowa، برندهای مشابه)
+          - 🔌 اتصال ADB از طریق WiFi
+          - 🏠 تعویض لانچر استوک با Projectivy/FLauncher
+          - 📡 اتصال خودکار کنترل بلوتوث (RSS-18KB و مشابه)
+          - 🎮 مپ دکمه‌های ریموت (HDMI، Recent، Voice، Live TV)
+          - ♿ فعال‌سازی خودکار سرویس دسترسی
+          - 🔌 پایداری ADB روی پورت ۵۵۵۵
+          - 🖱️ تنظیم سرعت پوینتر (-5 پیش‌فرض)
+
+          ### 📋 پیش‌نیازها
+          - تلفن/تبلی: روت شده (Magisk/KernelSU)
+          - ADB فعال در Developer Options
+          - پورت ۵۵۵۵ باز
+          - لانچر Projectivy از قبل نصب شده
+
+          ### 🚀 نصب
+          **Desktop:**
+          \`\`\`bash
+          # Linux
+          chmod +x TV-jailbreak-*.AppImage
+          ./TV-jailbreak-*.AppImage
+
+          # Windows
+          TV-jailbreak-Setup-*.exe
+          \`\`\`
+
+          **Android:**
+          \`\`\`bash
+          adb install tv-jailbreak-debug.apk
+          \`\`\`
+
+          **Scripts:**
+          \`\`\`bash
+          tar -xzf tv-jailbreak-scripts.tar.gz
+          cd scripts
+          ./tv-customizer.sh -i 192.168.1.100 -p 5555
+          \`\`\`
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: TV-jailbreak ${{ github.ref_name }}
+          body_path: release_notes.md
+          files: |
+            ./release/linux/*
+            ./release/windows/*
+            ./release/android/app-debug.apk
+            ./release/android-release/app-release.aab
+            ./release/scripts/tv-jailbreak-scripts.tar.gz
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,23 @@
+{
+  "appId": "com.tvjailbreak.app",
+  "appName": "TV-jailbreak",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true,
+    "backgroundColor": "#0f1115",
+    "overrideUserAgent": "TV-jailbreak/1.0"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0f1115",
+      "showSpinner": false
+    },
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

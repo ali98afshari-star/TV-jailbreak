@@ -1,0 +1,55 @@
+{
+  "name": "tv-jailbreak-dashboard",
+  "version": "1.0.0",
+  "description": "TV-jailbreak Cross-platform Dashboard (Electron + Vue 3 + RTL)",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"electron .\"",
+    "build": "vite build && electron-builder",
+    "build:linux": "vite build && electron-builder --linux",
+    "build:win": "vite build && electron-builder --win",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.vue"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.3.0",
+    "pinia": "^2.1.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vite": "^5.0.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.20.0"
+  },
+  "build": {
+    "appId": "com.tvjailbreak.dashboard",
+    "productName": "TV-jailbreak",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist/**/*",
+      "src/main.js",
+      "src/preload.js",
+      "package.json"
+    ],
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility",
+      "icon": "assets/icon.png"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
