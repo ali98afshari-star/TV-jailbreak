@@ -93,8 +93,7 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           api-level: 34
-          ndk-version: r26c
-          build-tools-version: '34.0.0'
+          cmdline-tools-version: latest
 
       - name: Install dependencies (Android)
         working-directory: ./android
