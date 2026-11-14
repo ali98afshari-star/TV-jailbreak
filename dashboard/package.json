@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "TV-jailbreak Cross-platform Dashboard (Electron + Vue 3 + RTL)",
   "main": "src/main.js",
+  "author": {
+    "name": "ali98afshari-star",
+    "email": "ali98afshari@gmail.com"
+  },
+  "homepage": "https://github.com/ali98afshari-star/TV-jailbreak",
   "scripts": {
     "dev": "concurrently \"vite\" \"electron .\"",
     "build": "vite build && electron-builder",
