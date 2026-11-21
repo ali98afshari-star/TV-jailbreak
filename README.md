@@ -3,7 +3,6 @@
 **Universal Android TV Customizer** — یک ابزار تمام‌دریک برای کاستومایز کردن تلویزیون‌های اندرویدی (Snowa، برندهای مشابه، و هر Android TV با روت) با رابط کاربری RTL فارسی/انگلیسی، اپ دسکتاپ (Electron + Vue 3)، اپ اندروید (Capacitor + Vue 3)، و اسکریپت‌های شل سبک.
 
 [![Release](https://img.shields.io/github/v/release/ali98afshari-star/TV-jailbreak?style=flat-square)](https://github.com/ali98afshari-star/TV-jailbreak/releases)
-[![License](https://img.shields.io/github/license/ali98afshari-star/TV-jailbreak?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20Android%20%7C%20macOS-blue?style=flat-square)](https://github.com/ali98afshari-star/TV-jailbreak/releases)
 [![Build](https://img.shields.io/github/actions/workflow/status/ali98afshari-star/TV-jailbreak/build-release.yml?style=flat-square)](https://github.com/ali98afshari-star/TV-jailbreak/actions)
 
@@ -239,7 +238,7 @@ export ADB_PERSISTENCE_ENABLED="true"
 
 ## 📄 لایسنس
 
-MIT License — آزاد برای استفاده، تغییر، و توزیع.
+© ۲۰۲۶ علی افشاری — تمامی حقوق محفوظ است. استفاده، تغییر یا توزیع بدون اجازهٔ کتبی مجاز نیست.
 
 ---
 
